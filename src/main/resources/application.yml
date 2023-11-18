@@ -1,0 +1,20 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/plan
+    username: root
+    password: fd7viDicidlP9d35
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    database: postgresql
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    defer-datasource-initialization: true
+    hibernate:
+      ddl-auto: update
+
+security:
+  jwt:
+    secret-key: 661C808BF08B2615856686425E657C4E5DD06152AF0FE6A532D4CFB4B9B16CCF
+    expiration: 86400
