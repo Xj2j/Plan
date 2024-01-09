@@ -1,27 +1,60 @@
 package ru.xj2j.plan.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import javax.validation.constraints.NotBlank;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity(name = "Issue")
 @Table(name = "issues")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@EqualsAndHashCode(callSuper = false)
 public class Issue extends AuditModel {
     public enum Priority {
-        URGENT,
-        HIGH,
-        MEDIUM,
-        LOW;
+        URGENT("Urgent"),
+        HIGH("High"),
+        MEDIUM("Medium"),
+        LOW("Low");
+
+        private final String label;
+
+        Priority(String label) {
+            this.label = label;
+        }
+
+        @Override
+        public String toString() {
+            return label;
+        }
+    }
+
+    public enum State {
+        BACKLOG("Backlog"),
+        UNSTARTED("Unstarted"),
+        STARTED("Started"),
+        COMPLETED("Completed"),
+        CANCELLED("Cancelled");
+
+        private final String label;
+
+        State(String label) {
+            this.label = label;
+        }
+
+        @Override
+        public String toString() {
+            return label;
+        }
     }
 
     @Id
@@ -29,40 +62,37 @@ public class Issue extends AuditModel {
     @Column(name = "id", updatable = false, nullable = false)
     private Long id;
 
-    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "project_id", referencedColumnName = "id", nullable = false)
-    private Project project;
+    @JoinColumn(name = "workspace_id", referencedColumnName = "id", nullable = false)
+    private Workspace workspace;
 
-    /*@JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "parent_id", referencedColumnName = "id")
-    private Issue parent;*/
-
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "state_id", referencedColumnName = "id")
-    private State state;
-
-    @NotBlank(message = "Name is required.")
-    @Column(name = "name")
-    private String name;
-
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
-    @Column(name = "description", columnDefinition = "json", nullable = false)
-    private String description;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "state")
+    private State state = State.BACKLOG;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "priority")
     private Priority priority;
 
-    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    @NotBlank(message = "Name is required.")
+    @Column(name = "name")
+    private String name;
+
+    @Column(name = "description", columnDefinition = "json")
+    private String description;
+
     @Column(name = "start_date")
     private LocalDateTime startDate;
 
-    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     @Column(name = "target_date")
     private LocalDateTime targetDate;
+
+    @Column(name = "completed_at")
+    private LocalDateTime completedAt;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "completed_by_id", referencedColumnName = "id")
+    private User completedBy;
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
@@ -70,27 +100,18 @@ public class Issue extends AuditModel {
             joinColumns = {@JoinColumn(name = "issue_id")},
             inverseJoinColumns = {@JoinColumn(name = "user_id")}
     )
-    private List<User> assignees;
+    private Set<User> assignees = new HashSet<>();
 
-    /*@JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
-    @OneToMany(mappedBy = "issue", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<IssueBlocker> blockerIssues;
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "issue", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<IssueComment> comments = new ArrayList<>();
 
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
-    @OneToMany(mappedBy = "issue", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<IssueLink> links;*/
-
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
-    @OneToMany(mappedBy = "issue", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<IssueAttachment> attachments;
-
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "completed_by_id", referencedColumnName = "id")
-    private User completedBy;
-
-    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
-    @Column(name = "completed_at")
-    private LocalDateTime completedAt;
+    public void addComment(IssueComment comment) {
+        comments.add(comment);
+        comment.setIssue(this);
+    }
+    public void removeComment(IssueComment comment) {
+        comments.remove(comment);
+        comment.setIssue(null);
+    }
 
 }

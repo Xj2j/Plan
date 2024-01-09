@@ -13,6 +13,11 @@ spring:
     defer-datasource-initialization: true
     hibernate:
       ddl-auto: update
+    generate-ddl: true
+    properties:
+      hibernate:
+        format_sql: true
+    show-sql: true
 
 security:
   jwt:

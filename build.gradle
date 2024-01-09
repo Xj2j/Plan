@@ -27,19 +27,27 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-security:3.1.5'
 
     implementation 'javax.validation:validation-api:2.0.1.Final'
-    implementation 'org.mapstruct:mapstruct:1.5.5.Final'
-    implementation 'org.projectlombok:lombok-mapstruct-binding:0.2.0'
 
     implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
 
     compileOnly 'org.projectlombok:lombok'
+
+    implementation 'org.projectlombok:lombok-mapstruct-binding:0.2.0'
+    implementation 'org.mapstruct:mapstruct:1.5.5.Final'
+
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
     runtimeOnly 'org.postgresql:postgresql'
     annotationProcessor 'org.projectlombok:lombok'
     annotationProcessor 'org.mapstruct:mapstruct-processor:1.5.5.Final'
+    testAnnotationProcessor 'org.mapstruct:mapstruct-processor:1.5.5.Final'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    /*testCompile group: 'org.testcontainers', name: 'postgresql', version: '1.15.1'
+    testCompile group: 'org.testcontainers', name: 'junit-jupiter', version: '1.15.1'*/
+    // https://mvnrepository.com/artifact/com.h2database/h2
+    testImplementation 'com.h2database:h2:2.2.220'
+
 }
 
 tasks.named('bootBuildImage') {

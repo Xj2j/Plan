@@ -1,86 +1,115 @@
 package ru.xj2j.plan.service;
 
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import ru.xj2j.plan.dto.WorkspaceCreateDTO;
 import ru.xj2j.plan.dto.WorkspaceDTO;
-import ru.xj2j.plan.exception.MyEntityAlreadyExistsException;
+import ru.xj2j.plan.dto.WorkspaceMemberDTO;
+import ru.xj2j.plan.dto.WorkspaceUpdateDTO;
+import ru.xj2j.plan.exception.CustomBadRequestException;
 import ru.xj2j.plan.exception.MyEntityNotFoundException;
 import ru.xj2j.plan.mapper.UserMapper;
+import ru.xj2j.plan.model.User;
 import ru.xj2j.plan.model.Workspace;
+import ru.xj2j.plan.model.WorkspaceMember;
+import ru.xj2j.plan.model.WorkspaceRoleType;
+import ru.xj2j.plan.repository.WorkspaceMemberRepository;
 import ru.xj2j.plan.repository.WorkspaceRepository;
 import ru.xj2j.plan.mapper.WorkspaceMapper;
 
 import javax.validation.*;
-import java.util.ArrayList;
+import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
+import java.util.stream.Collectors;
 
+@Slf4j
 @Service
+@AllArgsConstructor
 public class WorkspaceService {
 
-    private WorkspaceRepository workspaceRepository;
+    private final WorkspaceRepository workspaceRepository;
+    private final WorkspaceMemberService workspaceMemberService;
+    private final WorkspaceMapper workspaceMapper;
+    private final UserMapper userMapper;
 
-    public WorkspaceService(WorkspaceRepository workspaceRepository) {
-        this.workspaceRepository = workspaceRepository;
+    @Transactional(rollbackFor = CustomBadRequestException.class)
+    public WorkspaceDTO createWorkspace(WorkspaceCreateDTO workspaceDTO, User requestingUser) {
+
+        log.info("Creating workspace by user: " + requestingUser.getEmail());
+
+        if (workspaceRepository.existsBySlug(workspaceDTO.getSlug())) {
+            throw new CustomBadRequestException("Slug must be unique");
+        }
+
+        Workspace workspace = workspaceMapper.toEntity(workspaceDTO);
+
+        Workspace createdWorkspace = workspaceRepository.save(workspace);
+
+        WorkspaceMemberDTO createdMember = workspaceMemberService.addOwner(createdWorkspace, requestingUser);
+
+        //WorkspaceDTO createdWorkspaceDTO = workspaceMapper.toDto(createdWorkspace);
+
+        //createdWorkspaceDTO.getMembers().add(createdMember);
+
+        return workspaceMapper.toDto(createdWorkspace);
     }
 
-    public WorkspaceDTO getWorkspaceById(Long workspaceId) throws MyEntityNotFoundException {
-        Optional<Workspace> optionalWorkSpace = workspaceRepository.findById(workspaceId);
-        if (optionalWorkSpace.isPresent()) {
-            return WorkspaceMapper.INSTANCE.toDto(optionalWorkSpace.get());
+    @Transactional(rollbackFor = {MyEntityNotFoundException.class, CustomBadRequestException.class})
+    public WorkspaceDTO updateWorkspace(String slug, WorkspaceUpdateDTO workspaceDTO) {
+        log.info("Updating workspace with slug: {}", slug);
+
+        Workspace workspace = workspaceRepository.findBySlug(slug)
+                .orElseThrow(() -> new MyEntityNotFoundException("Workspace not found with slug: " + slug));
+
+        if (workspaceDTO.getSlug() != null && (!(workspaceDTO.getSlug().equals(slug)) && (workspaceRepository.existsBySlug(workspaceDTO.getSlug())))) {
+            throw new CustomBadRequestException("New slug must be unique");
+        }
+
+        Workspace modifiedWorkspace = workspaceMapper.updateWorkspaceFromDto(workspaceDTO, workspace);
+
+        Workspace updatedWorkspace = workspaceRepository.save(modifiedWorkspace);
+
+        log.info("Workspace updated with slug: {}", updatedWorkspace.getSlug());
+
+        return workspaceMapper.toDto(updatedWorkspace);
+    }
+
+    @Transactional(rollbackFor = MyEntityNotFoundException.class)
+    public void deleteWorkspace(String slug) {
+        log.info("Removal member with slug: {}", slug);
+
+        if (workspaceRepository.existsBySlug(slug)) {
+            workspaceRepository.deleteBySlug(slug);
         } else {
-            throw new MyEntityNotFoundException("Workspace not found with id: " + workspaceId);
+            throw new MyEntityNotFoundException("Workspace not found with slug: " + slug);
         }
+
+        /*Workspace workspace = workspaceRepository.findBySlug(slug)
+                .orElseThrow(() -> new MyEntityNotFoundException("Workspace not found with slug: " + slug));*/
+
+        //TODO удаление workspaceMembers, удаление issues, удаление issue assignees
+
+        //workspaceRepository.delete(workspace);
+
+        log.info("Workspace removed with slug: {}", slug);
     }
 
-    public WorkspaceDTO create(WorkspaceDTO request, String owner) throws ValidationException {
-        if (request.getName() == null || request.getName().isEmpty()) {
-            throw new ValidationException("Workspace name is required");
-        }
+    @Transactional(readOnly = true)
+    public List<WorkspaceDTO> getUserWorkspaces(User requestingUser) throws ValidationException {
+        log.info("Returning workspaces for user with email: {}", requestingUser.getEmail());
 
-        if (workspaceRepository.existsBySlug(request.getSlug())) {
-            throw new MyEntityAlreadyExistsException("Workspace already exists with slug: " + request.getSlug());
-        }
+        List<Workspace> workSpaces = workspaceRepository.findAllByMembers_Member_Id(requestingUser.getId());
 
-        Workspace workspace = new Workspace();
-        workspace.setName(request.getName());
-        workspace.setOwner(UserMapper.INSTANCE.toEntity(request.getOwner()));
-        workspaceRepository.save(workspace);
-
-        return WorkspaceMapper.INSTANCE.toDto(workspace);
+        //return workSpaces.stream().map(workspaceMapper::toDto).collect(Collectors.toList());
+        return workspaceMapper.toDto(workSpaces);
     }
 
-    public WorkspaceDTO updateWorkspace(Long workspaceId, WorkspaceDTO workSpaceDTO) throws MyEntityNotFoundException {
-        Optional<Workspace> optionalWorkSpace = workspaceRepository.findById(workspaceId);
-        if (optionalWorkSpace.isPresent()) {
-            Workspace workspace = optionalWorkSpace.get();
-            workspace.setName(workSpaceDTO.getName());
-            workspace.setDescription(workSpaceDTO.getDescription());
-            workspaceRepository.save(workspace);
-
-            return WorkspaceMapper.INSTANCE.toDto(workspace);
-        } else {
-            throw new MyEntityNotFoundException("Workspace not found with id: " + workspaceId);
-        }
-    }
-
-    public void deleteWorkspace(Long workspaceId) throws MyEntityNotFoundException {
-        Optional<Workspace> optionalWorkSpace = workspaceRepository.findById(workspaceId);
-        if (optionalWorkSpace.isPresent()) {
-            Workspace workSpace = optionalWorkSpace.get();
-            workspaceRepository.delete(workSpace);
-        } else {
-            throw new MyEntityNotFoundException("Workspace not found with id: " + workspaceId);
-        }
-    }
-
-    /*public List<WorkspaceDTO> getUserWorkspaces(String userEmail) throws ValidationException {
-        List<Workspace> workSpaces = workspaceRepository.findByUserEmail(userEmail);
-        List<WorkspaceDTO> workspaceDTOS = new ArrayList<>();
-        for (Workspace workSpace : workSpaces) {
-            workspaceDTOS.add(WorkspaceMapper.INSTANCE.toDto(workSpace));
-        }
-
-        return workspaceDTOS;
+    /*@Transactional(readOnly = true)
+    public WorkspaceDTO getWorkspaceById(String slug) {
+        return workspaceMapper.toDto(workspaceRepository.findBySlug(slug)
+                .orElseThrow(() -> new MyEntityNotFoundException("Workspace not found with slug: " + slug)));
     }*/
 
 }

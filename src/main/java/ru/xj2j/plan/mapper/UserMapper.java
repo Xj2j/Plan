@@ -1,17 +1,19 @@
 package ru.xj2j.plan.mapper;
 
-import org.mapstruct.Mapper;
+import org.mapstruct.*;
 import org.mapstruct.factory.Mappers;
 import ru.xj2j.plan.dto.UserDTO;
-import ru.xj2j.plan.dto.WorkspaceDTO;
 import ru.xj2j.plan.model.User;
-import ru.xj2j.plan.model.Workspace;
 
-@Mapper(componentModel = "spring")
+import static org.mapstruct.InjectionStrategy.CONSTRUCTOR;
+
+@Mapper(componentModel = "spring", injectionStrategy = CONSTRUCTOR, unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface UserMapper {
 
-    UserMapper INSTANCE = Mappers.getMapper(UserMapper.class);
-
+    //UserMapper INSTANCE = Mappers.getMapper(UserMapper.class);
     UserDTO toDto(User user);
     User toEntity(UserDTO userDTO);
+
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    void updateUserFromDto(UserDTO dto, @MappingTarget User user);
 }
