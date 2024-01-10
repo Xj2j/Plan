@@ -15,7 +15,7 @@ public class WorkspaceCreateDTO {
     @NotNull
     @Size(
             min = 5,
-            max = 30,
+            max = 40,
             message = "Name length must be between {min} and {max}."
     )
     @Pattern(regexp = "^[a-zA-Z0-9\\s\\-_]*$")
@@ -23,7 +23,7 @@ public class WorkspaceCreateDTO {
     @NotNull
     @Size(
             min = 5,
-            max = 30,
+            max = 40,
             message = "Slug length must be between {min} and {max}."
     )
     @Pattern(regexp = "^[a-z0-9\\-_]*$")
