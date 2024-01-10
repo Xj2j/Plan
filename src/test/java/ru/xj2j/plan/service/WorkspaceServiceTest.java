@@ -1,16 +1,10 @@
 package ru.xj2j.plan.service;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mapstruct.factory.Mappers;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import ru.xj2j.plan.dto.WorkspaceCreateDTO;
 import ru.xj2j.plan.dto.WorkspaceDTO;
 import ru.xj2j.plan.dto.WorkspaceMemberDTO;
@@ -18,23 +12,16 @@ import ru.xj2j.plan.dto.WorkspaceUpdateDTO;
 import ru.xj2j.plan.exception.CustomBadRequestException;
 import ru.xj2j.plan.exception.MyEntityNotFoundException;
 import ru.xj2j.plan.mapper.UserMapper;
-import ru.xj2j.plan.mapper.UserMapperImpl;
 import ru.xj2j.plan.mapper.WorkspaceMapper;
-import ru.xj2j.plan.mapper.WorkspaceMapperImpl;
 import ru.xj2j.plan.model.User;
 import ru.xj2j.plan.model.Workspace;
-import ru.xj2j.plan.repository.WorkspaceMemberRepository;
 import ru.xj2j.plan.repository.WorkspaceRepository;
 
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
-//import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-//@SpringBootTest(classes = {WorkspaceMapperImpl.class, UserMapperImpl.class})
-//@SpringJUnitConfig(MapstructConfig.class)
-//@ContextConfiguration
 @ExtendWith(MockitoExtension.class)
 class WorkspaceServiceTest {
 
@@ -54,7 +41,7 @@ class WorkspaceServiceTest {
     private WorkspaceService workspaceService;
 
     @Test
-    @DisplayName("Create workspace with unique slug")
+    @DisplayName("Should create and return the workspaceDTO")
     void createWorkspace_withUniqueSlug_shouldCreateWorkspace() {
         WorkspaceCreateDTO workspaceDTO = new WorkspaceCreateDTO("Test Workspace", "test-workspace", "Test description");
         User requestingUser = new User();
@@ -81,7 +68,7 @@ class WorkspaceServiceTest {
     }
 
     @Test
-    @DisplayName("Create workspace with non-unique slug")
+    @DisplayName("Create workspace should throw CustomBadRequestException when slug is not unique")
     void createWorkspace_withNonUniqueSlug_shouldThrowException() {
         WorkspaceCreateDTO workspaceDTO = new WorkspaceCreateDTO("Test Workspace", "test-workspace", "Test description");
         User requestingUser = new User();
@@ -136,58 +123,6 @@ class WorkspaceServiceTest {
         verify(workspaceRepository, never()).save(any());
     }
 
-    /*@Test
-    @DisplayName("Test updateWorkspace when workspace is successfully updated")
-    void testUpdateWorkspace_success() {
-        String slug = "existing-slug";
-        WorkspaceUpdateDTO workspaceDTO = new WorkspaceUpdateDTO();
-        Workspace workspace = new Workspace();
-        when(workspaceRepository.findBySlug(slug)).thenReturn(Optional.of(workspace));
-        when(workspaceRepository.existsBySlug(workspaceDTO.getSlug())).thenReturn(false);
-        Workspace updatedWorkspace = new Workspace();
-        when(workspaceRepository.save(workspace)).thenReturn(updatedWorkspace);
-        WorkspaceDTO workspaceDTOExpected = new WorkspaceDTO();
-        when(workspaceMapper.toDto(updatedWorkspace)).thenReturn(workspaceDTOExpected);
-
-        WorkspaceDTO workspaceDTOResult = workspaceService.updateWorkspace(slug, workspaceDTO);
-
-        assertThat(workspaceDTOResult).isEqualTo(workspaceDTOExpected);
-
-        *//*verify(workspaceRepository, times(1)).findBySlug(slug);
-        verify(workspaceRepository, times(1)).existsBySlug(workspaceDTO.getSlug());
-        verify(workspaceMapper, times(1)).updateWorkspaceFromDto(workspaceDTO, workspace);
-        verify(workspaceRepository, times(1)).save(workspace);*//*
-    }
-
-    @Test
-    @DisplayName("Update workspace should update and return the workspaceDTO")
-    void updateWorkspaceShouldUpdateAndReturnTheWorkspaceDTO() {
-        // Arrange
-        String slug = "test-slug";
-        Workspace workspace = new Workspace();
-        workspace.setSlug(slug);
-        WorkspaceUpdateDTO workspaceDTO = new WorkspaceUpdateDTO();
-        workspaceDTO.setName("New Name");
-        workspaceDTO.setSlug("new-slug");
-        workspaceDTO.setDescription("New Description");
-        WorkspaceDTO workspaceDTOResponse = new WorkspaceDTO();
-        workspaceDTOResponse.setName(workspaceDTO.getName());
-        workspaceDTOResponse.setSlug(workspaceDTO.getSlug());
-        workspaceDTOResponse.setDescription(workspaceDTO.getDescription());
-
-        when(workspaceRepository.findBySlug(slug)).thenReturn(Optional.of(workspace));
-        when(workspaceRepository.existsBySlug(workspaceDTO.getSlug())).thenReturn(false);
-        when(workspaceMapper.toDto(workspace)).thenReturn(workspaceDTOResponse);
-        when(workspaceMapper.updateWorkspaceFromDto(workspace)).then()
-
-        // Act
-        WorkspaceDTO result = workspaceService.updateWorkspace(slug, workspaceDTO);
-
-        // Assert
-        assertThat(result).isEqualTo(workspaceDTOResponse);
-        verify(workspaceMapper).updateWorkspaceFromDto(workspaceDTO, workspace);
-        verify(workspaceRepository).save(workspace);
-    }*/
 
     @Test
     @DisplayName("Should update and return the workspaceDTO")
@@ -221,83 +156,4 @@ class WorkspaceServiceTest {
         assertThat(result).isEqualTo(updatedWorkspace);
     }
 
-
-
-    /*@Mock
-    private WorkspaceRepository workspaceRepository;
-    @Mock
-    private WorkspaceMemberRepository workspaceMemberRepository;
-    @Autowired
-    @Spy
-    private UserMapper userMapper;
-    @Autowired
-    @Spy
-    private WorkspaceMapper workspaceMapper; // = Mockito.spy(WorkspaceMapper.class);
-    @InjectMocks
-    private WorkspaceService workspaceService;
-
-    *//*@BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
-    }*//*
-
-    void initMocks() {
-        workspaceService = new WorkspaceService(workspaceRepository, workspaceMemberRepository, workspaceMapper, userMapper);
-    }
-
-
-    //init
-    @BeforeEach
-    void setUp() {
-        initMocks();
-    }
-
-    @Test
-    void createWorkspace() {
-        // Создание тестового пользователя
-        User owner = new User();
-        owner.setEmail("test@example.com");
-
-        // Создание тестового DTO
-        WorkspaceCreateDTO workspaceDTO = new WorkspaceCreateDTO();
-        workspaceDTO.setName("Test Workspace");
-        workspaceDTO.setSlug("test-workspace");
-        workspaceDTO.setDescription("This is a test workspace");
-
-        // Создание тестового объекта Workspace
-        Workspace workspace = new Workspace();
-        workspace.setId(1L);
-        workspace.setName(workspaceDTO.getName());
-        workspace.setSlug(workspaceDTO.getSlug());
-        workspace.setDescription(workspaceDTO.getDescription());
-
-        // Настройка мокитов
-        when(workspaceRepository.save(any(Workspace.class))).thenReturn(workspace);
-
-        // Вызов тестируемого метода
-        WorkspaceDTO result = workspaceService.createWorkspace(workspaceDTO, owner);
-
-        // Проверка результата
-        assertEquals(workspace.getId(), result.getId());
-        assertEquals(workspace.getName(), result.getName());
-        assertEquals(workspace.getSlug(), result.getSlug());
-        assertEquals(workspace.getDescription(), result.getDescription());
-        //assertEquals(workspace.getCreatedBy().getEmail(), "test");
-    }
-
-    @Test
-    void updateWorkspace() {
-    }
-
-    @Test
-    void deleteWorkspace() {
-    }
-
-    @Test
-    void getWorkspaceById() {
-    }
-
-    @Test
-    void getUserWorkspaces() {
-    }*/
 }
