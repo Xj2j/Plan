@@ -15,6 +15,7 @@ import static org.mapstruct.InjectionStrategy.CONSTRUCTOR;
 @Mapper(componentModel = "spring", injectionStrategy = CONSTRUCTOR, uses = {UserMapper.class, IssueCommentMapper.class}, unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface IssueMapper {
 
+    @Mapping(target = "workspace", ignore = true)
     IssueDTO toDto(Issue issue);
     Issue toEntity(IssueDTO issueDTO);
 
@@ -24,5 +25,8 @@ public interface IssueMapper {
     Issue toEntity(IssueCreateDTO issueCreateDTO);
     Issue toEntity(IssueUpdateDTO issueUpdateDTO);
 
+    @Mapping(target = "workspace", ignore = true)
+    @Mapping(target = "description", ignore = true)
+    @Mapping(target = "comments", ignore = true)
     List<IssueDTO> toDtoList(List<Issue> issues);
 }

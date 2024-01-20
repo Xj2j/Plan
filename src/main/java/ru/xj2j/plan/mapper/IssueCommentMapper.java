@@ -12,6 +12,7 @@ import static org.mapstruct.InjectionStrategy.CONSTRUCTOR;
 @Mapper(componentModel = "spring", injectionStrategy = CONSTRUCTOR, uses = {UserMapper.class, IssueMapper.class}, unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface IssueCommentMapper {
 
+    @Mapping(target = "issue", ignore = true)
     CommentDTO toDto(IssueComment issueComment);
 
     IssueComment toEntity(CommentCreateDTO commentDTO);
@@ -21,5 +22,6 @@ public interface IssueCommentMapper {
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void updateFromDto(CommentUpdateDTO commentDTO, @MappingTarget IssueComment comment);
 
+    @Mapping(target = "issue", ignore = true)
     List<CommentDTO> toDtoList(List<IssueComment> comments);
 }
