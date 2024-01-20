@@ -24,5 +24,5 @@ public class IssueDTO {
     private LocalDateTime completedAt;
     private UserDTO completedBy;
     private Set<UserDTO> assignees;
-    private List<CommentDTO> attachments;
+    private List<CommentDTO> comments;
 }
