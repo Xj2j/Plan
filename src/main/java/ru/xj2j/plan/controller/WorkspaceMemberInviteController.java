@@ -1,11 +1,13 @@
 package ru.xj2j.plan.controller;
 
 import lombok.AllArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import ru.xj2j.plan.dto.CreateInviteRequestDTO;
+import ru.xj2j.plan.dto.JoinWorkspaceRequest;
 import ru.xj2j.plan.dto.WorkspaceMemberInviteDTO;
 import ru.xj2j.plan.model.User;
 import ru.xj2j.plan.service.WorkspaceMemberInviteService;
@@ -29,13 +31,14 @@ public class WorkspaceMemberInviteController {
     }
 
     @PostMapping("/{workspaceSlug}/invites/{id}")
-    @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<?> joinWorkspace(@PathVariable String workspaceSlug, @PathVariable("id") Long id, Authentication authentication) {
+    @PreAuthorize("@workspaceMemberInviteService.hasInviteToWorkspaceWithSlug(#workspaceSlug, #id)")
+    public ResponseEntity<?> joinWorkspace(@PathVariable String workspaceSlug, @PathVariable("id") Long id, JoinWorkspaceRequest request, Authentication authentication) {
         User requestingUser = (User) authentication.getPrincipal();
-        return workspaceMemberInviteService.handleJoinWorkspaceRequest(workspaceSlug, id, requestingUser);
+        workspaceMemberInviteService.handleJoinWorkspaceRequest(workspaceSlug, id, request, requestingUser);
+        return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/{workspaceSlug}/invites")
+    /*@GetMapping("/{workspaceSlug}/invites")
     @PreAuthorize("@roleService.hasAnyRoleByWorkspaceSlug(#workspaceSlug, @WorkspaceRole.ADMIN)")
     public List<CreateInviteRequestDTO> getWorkspaceInvites(@PathVariable String workspaceSlug) {
         return workspaceMemberInviteService.getWorkspaceInvites(workspaceSlug);
@@ -52,5 +55,5 @@ public class WorkspaceMemberInviteController {
     public ResponseEntity<?> deleteInvitation(@PathVariable String workspaceSlug, @PathVariable Long id) {
             workspaceMemberInviteService.deleteInvitation(workspaceSlug, id);
             return ResponseEntity.noContent().build();
-    }
+    }*/
 }

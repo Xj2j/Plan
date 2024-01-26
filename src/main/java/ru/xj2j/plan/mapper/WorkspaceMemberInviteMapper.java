@@ -15,7 +15,11 @@ import static org.mapstruct.InjectionStrategy.CONSTRUCTOR;
 @Mapper(componentModel = "spring", injectionStrategy = CONSTRUCTOR, unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface WorkspaceMemberInviteMapper {
 
+    @Mapping(source = "workspace.slug", target = "workspaceSlug")
+    @Mapping(source = "invitor.email", target = "invitorEmail")
     WorkspaceMemberInviteDTO toDto(WorkspaceMemberInvite workspaceMemberInvite);
 
+    @Mapping(source = "workspace.slug", target = "workspaceSlug")
+    @Mapping(source = "invitor.email", target = "invitorEmail")
     List<WorkspaceMemberInviteDTO> toDtoList(List<WorkspaceMemberInvite> workspaceMemberInvites);
 }

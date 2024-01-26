@@ -25,12 +25,12 @@ public class WorkspaceMemberInvite {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "email", nullable = false)
+    private String email;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "workspace_id", referencedColumnName = "id", nullable = false)
     private Workspace workspace;
-
-    @Column(name = "email", nullable = false)
-    private String email;
 
     @Column(name = "role", nullable = false)
     @Enumerated(STRING)
@@ -44,7 +44,7 @@ public class WorkspaceMemberInvite {
     private String message;
 
     @Column(name = "accepted")
-    private boolean isAssepted;
+    private boolean accepted;
 
     @Column(name = "responded_at")
     private LocalDateTime respondedAt;

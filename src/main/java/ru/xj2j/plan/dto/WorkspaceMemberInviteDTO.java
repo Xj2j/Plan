@@ -16,6 +16,8 @@ public class WorkspaceMemberInviteDTO {
     private String workspaceSlug;
     private String role;
     private String invitorEmail;
+    private String message;
+    private boolean accepted;
     private LocalDateTime respondedAt;
     private LocalDateTime createdAt;
 }

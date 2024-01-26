@@ -43,6 +43,7 @@ dependencies {
     annotationProcessor 'org.mapstruct:mapstruct-processor:1.5.5.Final'
     testAnnotationProcessor 'org.mapstruct:mapstruct-processor:1.5.5.Final'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.security:spring-security-test'
     /*testCompile group: 'org.testcontainers', name: 'postgresql', version: '1.15.1'
     testCompile group: 'org.testcontainers', name: 'junit-jupiter', version: '1.15.1'*/
     // https://mvnrepository.com/artifact/com.h2database/h2
