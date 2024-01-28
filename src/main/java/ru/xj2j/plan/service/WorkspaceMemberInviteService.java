@@ -87,11 +87,13 @@ public class WorkspaceMemberInviteService {
             invite.setAccepted(request.isAccepted());
             invite.setRespondedAt(LocalDateTime.now());
 
-            if (request.isAccepted()) {
+            createWorkspaceMember(workspaceSlug, user, invite.getRole());
+
+            /*if (request.isAccepted()) {
                 createWorkspaceMember(workspaceSlug, user, invite.getRole());
             } else {
                 workspaceMemberInviteRepository.delete(invite);
-            }
+            }*/
         } else {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "You have already responded to the invitation request");
         }
