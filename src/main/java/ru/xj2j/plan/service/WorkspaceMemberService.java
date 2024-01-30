@@ -61,18 +61,6 @@ public class WorkspaceMemberService {
     }
 
     @Transactional
-    public WorkspaceMemberDTO addOwner(Workspace createdWorkspace, User requestingUser) {
-
-        WorkspaceMember workspaceMember = new WorkspaceMember();
-        workspaceMember.setWorkspace(createdWorkspace);
-        workspaceMember.setMember(requestingUser);
-        workspaceMember.setRole(WorkspaceRoleType.OWNER);
-
-        return memberMapper.toDto(workspaceMemberRepository.save(workspaceMember));
-    }
-
-
-    @Transactional
     public WorkspaceMemberDTO updateMemberRole(String workspaceSlug, Long memberId, WorkspaceMemberDTO memberDto, User requestingUser) {
         log.info("Updating role for member with id: {} in workspace with slug: {}", memberId, workspaceSlug);
 
