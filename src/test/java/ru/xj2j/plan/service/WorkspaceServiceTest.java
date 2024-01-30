@@ -13,64 +13,77 @@ import ru.xj2j.plan.exception.CustomBadRequestException;
 import ru.xj2j.plan.exception.MyEntityNotFoundException;
 import ru.xj2j.plan.mapper.UserMapper;
 import ru.xj2j.plan.mapper.WorkspaceMapper;
+import ru.xj2j.plan.mapper.WorkspaceMemberMapper;
 import ru.xj2j.plan.model.User;
 import ru.xj2j.plan.model.Workspace;
+import ru.xj2j.plan.model.WorkspaceMember;
+import ru.xj2j.plan.repository.WorkspaceMemberRepository;
 import ru.xj2j.plan.repository.WorkspaceRepository;
 
+import java.lang.reflect.Method;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+
 @ExtendWith(MockitoExtension.class)
 class WorkspaceServiceTest {
 
+    private static final String EMAIl = "test@email.com";
+    private static final String WORKSPACE_NAME = "Test Workspace";
+    private static final String WORKSPACE_SLUG = "test-workspace";
+    private static final String WORKSPACE_DESCRIPTION = "Test description";
+    private static final String NON_UNIQUE_SLUG = "non-unique-slug";
+    private static final String NEW_NAME = "New Name";
     @Mock
     private WorkspaceRepository workspaceRepository;
 
     @Mock
-    private WorkspaceMemberService workspaceMemberService;
+    private WorkspaceMemberRepository workspaceMemberRepository;
 
     @Mock
     private WorkspaceMapper workspaceMapper;
 
     @Mock
-    private UserMapper userMapper;
+    private WorkspaceMemberMapper memberMapper;
 
     @InjectMocks
     private WorkspaceService workspaceService;
 
     @Test
     @DisplayName("Should create and return the workspaceDTO")
-    void createWorkspace_withUniqueSlug_shouldCreateWorkspace() {
-        WorkspaceCreateDTO workspaceDTO = new WorkspaceCreateDTO("Test Workspace", "test-workspace", "Test description");
-        User requestingUser = new User();
-        requestingUser.setEmail("test@example.com");
+    void createWorkspace_withUniqueSlug_shouldCreateWorkspace() throws NoSuchMethodException {
+        WorkspaceCreateDTO workspaceDTO = new WorkspaceCreateDTO(WORKSPACE_NAME, WORKSPACE_SLUG, WORKSPACE_DESCRIPTION);
+        User requestingUser = User.builder()
+                .email(EMAIl)
+                .build();
 
         Workspace workspace = new Workspace();
         workspace.setSlug(workspaceDTO.getSlug());
         Workspace createdWorkspace = new Workspace();
         createdWorkspace.setSlug(workspaceDTO.getSlug());
-        WorkspaceMemberDTO createdMember = new WorkspaceMemberDTO();
+        WorkspaceMemberDTO createdMemberDTO = new WorkspaceMemberDTO();
         WorkspaceDTO createdWorkspaceDTO = new WorkspaceDTO();
         createdWorkspaceDTO.setSlug(workspaceDTO.getSlug());
 
-        when(workspaceRepository.existsBySlug(workspaceDTO.getSlug())).thenReturn(false);
+        when(workspaceRepository.existsBySlug(WORKSPACE_SLUG)).thenReturn(false);
         when(workspaceMapper.toEntity(workspaceDTO)).thenReturn(workspace);
         when(workspaceRepository.save(workspace)).thenReturn(createdWorkspace);
-        when(workspaceMemberService.addOwner(createdWorkspace, requestingUser)).thenReturn(createdMember);
+        when(workspaceMemberRepository.save(any())).thenReturn(new WorkspaceMember());
+        when(memberMapper.toDto(any())).thenReturn(createdMemberDTO);
         when(workspaceMapper.toDto(createdWorkspace)).thenReturn(createdWorkspaceDTO);
 
         WorkspaceDTO result = workspaceService.createWorkspace(workspaceDTO, requestingUser);
 
         assertThat(result.getSlug()).isEqualTo(workspaceDTO.getSlug());
-        assertThat(result.getMembers()).contains(createdMember);
+        assertThat(result.getMembers()).contains(createdMemberDTO);
     }
 
     @Test
     @DisplayName("Create workspace should throw CustomBadRequestException when slug is not unique")
     void createWorkspace_withNonUniqueSlug_shouldThrowException() {
-        WorkspaceCreateDTO workspaceDTO = new WorkspaceCreateDTO("Test Workspace", "test-workspace", "Test description");
+        WorkspaceCreateDTO workspaceDTO = new WorkspaceCreateDTO(WORKSPACE_NAME, WORKSPACE_SLUG, WORKSPACE_DESCRIPTION);
         User requestingUser = new User();
 
         when(workspaceRepository.existsBySlug(workspaceDTO.getSlug())).thenReturn(true);
@@ -88,7 +101,6 @@ class WorkspaceServiceTest {
 
         when(workspaceRepository.findBySlug(slug)).thenReturn(Optional.empty());
 
-        //assertThrows(MyEntityNotFoundException.class, () -> workspaceService.updateWorkspace(slug, workspaceUpdateDTO));
         assertThatThrownBy(() -> workspaceService.updateWorkspace(slug, workspaceUpdateDTO))
                 .isInstanceOf(MyEntityNotFoundException.class)
                 .hasMessageContaining("Workspace not found with slug: " + slug);
@@ -102,23 +114,19 @@ class WorkspaceServiceTest {
     @Test
     @DisplayName("updateWorkspace should throw CustomBadRequestException when new slug is not unique")
     void updateWorkspace_WhenNewSlugNotUnique_ShouldThrowCustomBadRequestException() {
-        String existingSlug = "existing-slug";
-        String newSlug = "non-unique-slug";
         Workspace existingWorkspace = new Workspace();
-        existingWorkspace.setSlug(existingSlug);
+        existingWorkspace.setSlug(WORKSPACE_SLUG);
         WorkspaceUpdateDTO workspaceUpdateDTO = new WorkspaceUpdateDTO();
-        workspaceUpdateDTO.setSlug(newSlug);
+        workspaceUpdateDTO.setSlug(NON_UNIQUE_SLUG);
 
-        when(workspaceRepository.findBySlug(existingSlug)).thenReturn(Optional.of(existingWorkspace));
-        when(workspaceRepository.existsBySlug(newSlug)).thenReturn(true);
+        when(workspaceRepository.findBySlug(WORKSPACE_SLUG)).thenReturn(Optional.of(existingWorkspace));
+        when(workspaceRepository.existsBySlug(NON_UNIQUE_SLUG)).thenReturn(true);
 
-        //assertThrows(CustomBadRequestException.class, () -> workspaceService.updateWorkspace(existingSlug, workspaceUpdateDTO));
-
-        assertThatThrownBy(() -> workspaceService.updateWorkspace(existingSlug, workspaceUpdateDTO))
+        assertThatThrownBy(() -> workspaceService.updateWorkspace(WORKSPACE_SLUG, workspaceUpdateDTO))
                 .isInstanceOf(CustomBadRequestException.class)
                 .hasMessageContaining("New slug must be unique");
-        verify(workspaceRepository, times(1)).findBySlug(existingSlug);
-        verify(workspaceRepository, times(1)).existsBySlug(newSlug);
+        verify(workspaceRepository, times(1)).findBySlug(WORKSPACE_SLUG);
+        verify(workspaceRepository, times(1)).existsBySlug(NON_UNIQUE_SLUG);
         verify(workspaceMapper, never()).updateWorkspaceFromDto(any(), any());
         verify(workspaceRepository, never()).save(any());
     }
@@ -127,31 +135,31 @@ class WorkspaceServiceTest {
     @Test
     @DisplayName("Should update and return the workspaceDTO")
     public void testUpdateWorkspace() {
-        String slug = "test-slug";
-        WorkspaceUpdateDTO workspaceUpdateDTO = new WorkspaceUpdateDTO();
-        workspaceUpdateDTO.setName("New Name");
+        WorkspaceUpdateDTO workspaceUpdateDTO = WorkspaceUpdateDTO.builder()
+                .name(NEW_NAME)
+                .build();
+        Workspace existingWorkspace = Workspace.builder()
+                .slug(WORKSPACE_SLUG)
+                .name(WORKSPACE_NAME)
+                .description(WORKSPACE_DESCRIPTION)
+                .build();
+        Workspace modifiedWorkspace = Workspace.builder()
+                .slug(WORKSPACE_SLUG)
+                .name(NEW_NAME)
+                .description(WORKSPACE_DESCRIPTION)
+                .build();
+        WorkspaceDTO updatedWorkspace = WorkspaceDTO.builder()
+                .slug(WORKSPACE_SLUG)
+                .name(NEW_NAME)
+                .description(WORKSPACE_DESCRIPTION)
+                .build();
 
-        Workspace existingWorkspace = new Workspace();
-        existingWorkspace.setSlug(slug);
-        existingWorkspace.setName("Old Name");
-        existingWorkspace.setDescription("Old Description");
-
-        Workspace modifiedWorkspace = new Workspace();
-        modifiedWorkspace.setSlug(slug);
-        modifiedWorkspace.setName("New Name");
-        modifiedWorkspace.setDescription("Old Description");
-
-        WorkspaceDTO updatedWorkspace = new WorkspaceDTO();
-        updatedWorkspace.setSlug(slug);
-        updatedWorkspace.setName("New Name");
-        updatedWorkspace.setDescription("Old Description");
-
-        when(workspaceRepository.findBySlug(slug)).thenReturn(Optional.of(existingWorkspace));
+        when(workspaceRepository.findBySlug(WORKSPACE_SLUG)).thenReturn(Optional.of(existingWorkspace));
         when(workspaceMapper.updateWorkspaceFromDto(workspaceUpdateDTO, existingWorkspace)).thenReturn(modifiedWorkspace);
         when(workspaceRepository.save(modifiedWorkspace)).thenReturn(modifiedWorkspace);
         when(workspaceMapper.toDto(modifiedWorkspace)).thenReturn(updatedWorkspace);
 
-        WorkspaceDTO result = workspaceService.updateWorkspace(slug, workspaceUpdateDTO);
+        WorkspaceDTO result = workspaceService.updateWorkspace(WORKSPACE_SLUG, workspaceUpdateDTO);
 
         assertThat(result).isEqualTo(updatedWorkspace);
     }
