@@ -1,7 +1,6 @@
 package ru.xj2j.plan.controller;
 
 import lombok.AllArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -23,14 +22,14 @@ public class WorkspaceMemberInviteController {
 
     private final WorkspaceMemberInviteService workspaceMemberInviteService;
 
-    @PostMapping("/{workspaceSlug}/invites")
+    @PostMapping("/{workspaceSlug}/invitations")
     @PreAuthorize("@roleService.hasAnyRoleByWorkspaceSlug(#workspaceSlug, @WorkspaceRole.MEMBER)")
     public List<WorkspaceMemberInviteDTO> inviteUsers(@PathVariable String workspaceSlug, @NotEmpty @Valid List<CreateInviteRequestDTO> createInviteRequestDTOs, Authentication authentication) {
         User requestingUser = (User) authentication.getPrincipal();
         return workspaceMemberInviteService.inviteUsers(workspaceSlug, createInviteRequestDTOs, requestingUser);
     }
 
-    @PostMapping("/{workspaceSlug}/invites/{id}")
+    @PostMapping("/{workspaceSlug}/invitations/{id}")
     @PreAuthorize("@workspaceMemberInviteService.hasInviteToWorkspaceWithSlug(#workspaceSlug, #id)")
     public ResponseEntity<?> joinWorkspace(@PathVariable String workspaceSlug, @PathVariable("id") Long id, JoinWorkspaceRequest request, Authentication authentication) {
         User requestingUser = (User) authentication.getPrincipal();
@@ -38,22 +37,23 @@ public class WorkspaceMemberInviteController {
         return ResponseEntity.noContent().build();
     }
 
-    /*@GetMapping("/{workspaceSlug}/invites")
-    @PreAuthorize("@roleService.hasAnyRoleByWorkspaceSlug(#workspaceSlug, @WorkspaceRole.ADMIN)")
-    public List<CreateInviteRequestDTO> getWorkspaceInvites(@PathVariable String workspaceSlug) {
-        return workspaceMemberInviteService.getWorkspaceInvites(workspaceSlug);
-    }
-
     @GetMapping("/invites")
     @PreAuthorize("isAuthenticated()")
-    public List<CreateInviteRequestDTO> getUserInvites(Authentication authentication) {
+    public List<WorkspaceMemberInviteDTO> getInvitationsForUser(Authentication authentication) {
         User requestingUser = (User) authentication.getPrincipal();
-        return workspaceMemberInviteService.getUserInvites(requestingUser);
+        return workspaceMemberInviteService.getInvitationsForUser(requestingUser);
+    }
+
+    @GetMapping("/{workspaceSlug}/invites")
+    @PreAuthorize("@roleService.hasAnyRoleByWorkspaceSlug(#workspaceSlug, @WorkspaceRole.ADMIN)")
+    public List<WorkspaceMemberInviteDTO> getInvitationsToWorkspace(@PathVariable String workspaceSlug) {
+        return workspaceMemberInviteService.getInvitationsToWorkspace(workspaceSlug);
     }
 
     @DeleteMapping("/{workspaceSlug}/invites/{id}")
+    @PreAuthorize("@workspaceMemberInviteService.isInvitor(#workspaceSlug, #id) OR @roleService.hasAnyRoleByWorkspaceSlug(#workspaceSlug, @WorkspaceRole.ADMIN)")
     public ResponseEntity<?> deleteInvitation(@PathVariable String workspaceSlug, @PathVariable Long id) {
             workspaceMemberInviteService.deleteInvitation(workspaceSlug, id);
             return ResponseEntity.noContent().build();
-    }*/
+    }
 }

@@ -120,6 +120,7 @@ public class WorkspaceMemberService {
 
     @Transactional(readOnly = true)
     public List<WorkspaceMemberDTO> getAllMembers(String workspaceSlug) {
+        log.info("Returning members from workspace with slug: {}", workspaceSlug);
         List<WorkspaceMember> members = workspaceMemberRepository.findWorkspaceMembersByWorkspaceSlug(workspaceSlug);
         return members.stream().map(memberMapper::toDto).collect(Collectors.toList());
     }

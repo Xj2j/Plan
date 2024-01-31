@@ -55,7 +55,7 @@ public class WorkspaceMemberInviteService {
                 .map(CreateInviteRequestDTO::getEmail)
                 .toList();
 
-        List<WorkspaceMember> workspaceMembers = workspaceMemberRepository.findByWorkspaceSlugAndMember_EmailIn(workspace.getSlug(), invitedEmails);
+        List<WorkspaceMember> workspaceMembers = workspaceMemberRepository.findByWorkspace_SlugAndMember_EmailIn(workspace.getSlug(), invitedEmails);
         if (!workspaceMembers.isEmpty()) throw new CustomBadRequestException("Some users are already members of the workspace");
 
         //TODO маппинг
@@ -116,11 +116,11 @@ public class WorkspaceMemberInviteService {
 
 
     @Transactional(readOnly = true)
-    public boolean hasInviteToWorkspaceWithSlug(String workspaceSlug, Long inviteId) {
+    public boolean hasInviteToWorkspaceWithSlug(String workspaceSlug, Long invitationId) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         log.info("Checking for an invitation for a user with an email : {} in a workspace with slug: {}", email, workspaceSlug);
 
-        boolean isPresent = workspaceMemberInviteRepository.existsByIdAndEmailAndWorkspaceSlug(inviteId, email, workspaceSlug);
+        boolean isPresent = workspaceMemberInviteRepository.existsByIdAndEmailAndWorkspace_Slug(invitationId, email, workspaceSlug);
 
         if (isPresent) {
             log.info("User with email: {} has an invitation to workspace with slug: {}", email, workspaceSlug);
@@ -128,5 +128,45 @@ public class WorkspaceMemberInviteService {
         }
         log.info("User with email: {} does not have an invitation to workspace with slug: {}", email, workspaceSlug);
         return false;
+    }
+
+    @Transactional(readOnly = true)
+    public boolean isInvitor(String workspaceSlug, Long invitationId) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        log.info("Checking that user with an email : {} is invitor invitations with id: {}", email, invitationId);
+
+        boolean isInvitor = workspaceMemberInviteRepository.existsByIdAndInvitor_EmailAndWorkspace_Slug(invitationId, email, workspaceSlug);
+
+        if (isInvitor) {
+            log.info("User with email: {} is inviter of the invitation with id: {}", email, invitationId);
+            return true;
+        }
+        log.info("User with email: {} is not the inviter of the invitation with id: {}", email, invitationId);;
+        return false;
+
+    }
+
+    @Transactional(readOnly = true)
+    public List<WorkspaceMemberInviteDTO> getInvitationsForUser(User requestingUser) {
+        log.info("Returning invitations for user with email: {}", requestingUser.getEmail());
+        return inviteMapper.toDtoList(workspaceMemberInviteRepository.getByEmail(requestingUser.getEmail()));
+    }
+
+    @Transactional(readOnly = true)
+    public List<WorkspaceMemberInviteDTO> getInvitationsToWorkspace(String workspaceSlug) {
+        log.info("Returning invitations to Workspace with slug: {}", workspaceSlug);
+        return inviteMapper.toDtoList(workspaceMemberInviteRepository.getByWorkspace_Slug(workspaceSlug));
+    }
+
+    public void deleteInvitation(String workspaceSlug, Long invitationId) {
+        log.info("Removal invitation with id: {} to workspace with slug: {}", invitationId, workspaceSlug);
+
+        if (workspaceMemberInviteRepository.existsById(invitationId)) {
+            workspaceMemberInviteRepository.deleteById(invitationId);
+        } else {
+            throw new MyEntityNotFoundException("The Invitation being deleted does not exist");
+        }
+
+        log.info("Removed invitation with id: {} to workspace with slug: {}", invitationId, workspaceSlug);
     }
 }
