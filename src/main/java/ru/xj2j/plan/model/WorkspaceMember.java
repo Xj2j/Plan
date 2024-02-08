@@ -2,10 +2,7 @@ package ru.xj2j.plan.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
@@ -15,6 +12,7 @@ import static jakarta.persistence.EnumType.STRING;
 
 @Data
 @Entity
+@Builder
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "workspace_members")
@@ -34,6 +32,7 @@ public class WorkspaceMember extends AuditModel {
     @JoinColumn(name = "member_id", referencedColumnName = "id", nullable = false)
     private User member;
 
+    @Column(name = "role")
     @Enumerated(STRING)
     private WorkspaceRoleType role;
 

@@ -1,6 +1,5 @@
 package ru.xj2j.plan.service;
 
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -11,7 +10,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import ru.xj2j.plan.dto.CreateInviteRequestDTO;
+import ru.xj2j.plan.dto.CreateInviteRequest;
 import ru.xj2j.plan.dto.WorkspaceMemberInviteDTO;
 import ru.xj2j.plan.exception.CustomBadRequestException;
 import ru.xj2j.plan.exception.MyEntityNotFoundException;
@@ -25,7 +24,6 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -54,7 +52,7 @@ class WorkspaceMemberInviteServiceTest {
     private Workspace workspace;
     private WorkspaceMember requester;
     private List<WorkspaceMemberInvite> invites;
-    private List<CreateInviteRequestDTO> createInviteRequestDTOs;
+    private List<CreateInviteRequest> createInviteRequests;
     private List<WorkspaceMemberInviteDTO> invitesDTOs;
 
     private static final String SLUG = "test-slug";
@@ -78,7 +76,7 @@ class WorkspaceMemberInviteServiceTest {
                 .build();
         invites = List.of(new WorkspaceMemberInvite());
         invitesDTOs = List.of(new WorkspaceMemberInviteDTO());
-        createInviteRequestDTOs = List.of(new CreateInviteRequestDTO(EMAIL, ROLE_MEMBER, MESSAGE));
+        createInviteRequests = List.of(new CreateInviteRequest(EMAIL, ROLE_MEMBER, MESSAGE));
     }
 
     @Test
@@ -90,7 +88,7 @@ class WorkspaceMemberInviteServiceTest {
         when(workspaceMemberInviteRepository.saveAll(any())).thenReturn(invites);
         when(inviteMapper.toDtoList(any())).thenReturn(invitesDTOs);
 
-        var result = workspaceMemberInviteService.inviteUsers(SLUG, createInviteRequestDTOs, requestingUser);
+        var result = workspaceMemberInviteService.inviteUsers(SLUG, createInviteRequests, requestingUser);
 
         verify(workspaceMemberRepository).findByWorkspace_SlugAndMember_EmailIn(SLUG, List.of(EMAIL));
         assertThat(result).isEqualTo(invitesDTOs);
@@ -101,7 +99,7 @@ class WorkspaceMemberInviteServiceTest {
     void inviteUsers_WhenWorkspaceNotFound_ShouldThrowException() {
         when(workspaceRepository.findBySlug(any())).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> workspaceMemberInviteService.inviteUsers(SLUG, createInviteRequestDTOs, requestingUser))
+        assertThatThrownBy(() -> workspaceMemberInviteService.inviteUsers(SLUG, createInviteRequests, requestingUser))
                 .isInstanceOf(MyEntityNotFoundException.class)
                 .hasMessageContaining("Workspace with slug test-slug not found");
 
@@ -114,7 +112,7 @@ class WorkspaceMemberInviteServiceTest {
         when(workspaceRepository.findBySlug(any())).thenReturn(Optional.of(workspace));
         when(workspaceMemberRepository.findByWorkspace_SlugAndMember_Id(any(), any())).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> workspaceMemberInviteService.inviteUsers(SLUG, createInviteRequestDTOs, requestingUser))
+        assertThatThrownBy(() -> workspaceMemberInviteService.inviteUsers(SLUG, createInviteRequests, requestingUser))
                 .isInstanceOf(CustomBadRequestException.class)
                 .hasMessageContaining("Invalid requester or workspace");
         verify(workspaceMemberRepository).findByWorkspace_SlugAndMember_Id(SLUG, requestingUser.getId());
@@ -123,12 +121,12 @@ class WorkspaceMemberInviteServiceTest {
     @Test
     @DisplayName("Test inviteUsers method with requester having higher role")
     void inviteUsers_WhenAssignedRoleHigher_ShouldThrowException() {
-        createInviteRequestDTOs = List.of(new CreateInviteRequestDTO(EMAIL, ROLE_ADMIN, MESSAGE));
+        createInviteRequests = List.of(new CreateInviteRequest(EMAIL, ROLE_ADMIN, MESSAGE));
 
         when(workspaceRepository.findBySlug(any())).thenReturn(Optional.of(workspace));
         when(workspaceMemberRepository.findByWorkspace_SlugAndMember_Id(any(), any())).thenReturn(Optional.of(requester));
 
-        assertThatThrownBy(() -> workspaceMemberInviteService.inviteUsers(SLUG, createInviteRequestDTOs, requestingUser))
+        assertThatThrownBy(() -> workspaceMemberInviteService.inviteUsers(SLUG, createInviteRequests, requestingUser))
                 .isInstanceOf(CustomBadRequestException.class)
                 .hasMessageContaining("You cannot assign a role higher than your own role");
     }
@@ -140,7 +138,7 @@ class WorkspaceMemberInviteServiceTest {
         when(workspaceMemberRepository.findByWorkspace_SlugAndMember_Id(any(), any())).thenReturn(Optional.of(requester));
         when(workspaceMemberRepository.findByWorkspace_SlugAndMember_EmailIn(any(), any())).thenReturn(List.of(new WorkspaceMember()));
 
-        assertThatThrownBy(() -> workspaceMemberInviteService.inviteUsers(SLUG, createInviteRequestDTOs, requestingUser))
+        assertThatThrownBy(() -> workspaceMemberInviteService.inviteUsers(SLUG, createInviteRequests, requestingUser))
                 .isInstanceOf(CustomBadRequestException.class)
                 .hasMessageContaining("Some users are already members of the workspace");
         verify(workspaceMemberRepository).findByWorkspace_SlugAndMember_EmailIn(SLUG, List.of(EMAIL));
@@ -153,7 +151,7 @@ class WorkspaceMemberInviteServiceTest {
         Authentication authentication = new UsernamePasswordAuthenticationToken(requestingUser, null);
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        when(workspaceMemberInviteRepository.existsByIdAndEmailAndWorkspaceSlug(INVITE_ID, requestingUser.getEmail(), SLUG)).thenReturn(true);
+        when(workspaceMemberInviteRepository.existsByIdAndEmailAndWorkspace_Slug(INVITE_ID, requestingUser.getEmail(), SLUG)).thenReturn(true);
 
         boolean result = workspaceMemberInviteService.hasInviteToWorkspaceWithSlug(SLUG, INVITE_ID);
 
@@ -166,7 +164,7 @@ class WorkspaceMemberInviteServiceTest {
         Authentication authentication = new UsernamePasswordAuthenticationToken(requestingUser, null);
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        when(workspaceMemberInviteRepository.existsByIdAndEmailAndWorkspaceSlug(INVITE_ID, requestingUser.getEmail(), SLUG)).thenReturn(false);
+        when(workspaceMemberInviteRepository.existsByIdAndEmailAndWorkspace_Slug(INVITE_ID, requestingUser.getEmail(), SLUG)).thenReturn(false);
 
         boolean result = workspaceMemberInviteService.hasInviteToWorkspaceWithSlug(SLUG, INVITE_ID);
 

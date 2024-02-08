@@ -7,7 +7,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
-import ru.xj2j.plan.dto.CreateInviteRequestDTO;
+import ru.xj2j.plan.dto.CreateInviteRequest;
 import ru.xj2j.plan.dto.JoinWorkspaceRequest;
 import ru.xj2j.plan.dto.WorkspaceMemberInviteDTO;
 import ru.xj2j.plan.exception.CustomBadRequestException;
@@ -36,7 +36,7 @@ public class WorkspaceMemberInviteService {
     private final WorkspaceMemberInviteMapper inviteMapper;
 
     @Transactional
-    public List<WorkspaceMemberInviteDTO> inviteUsers(String workspaceSlug, List<CreateInviteRequestDTO> createInviteRequestDTOs, User requestingUser) {
+    public List<WorkspaceMemberInviteDTO> inviteUsers(String workspaceSlug, List<CreateInviteRequest> createInviteRequests, User requestingUser) {
 
         log.info("Creating invitations to workspace with slug: {}", workspaceSlug);
 
@@ -46,13 +46,13 @@ public class WorkspaceMemberInviteService {
         WorkspaceMember requester = workspaceMemberRepository.findByWorkspace_SlugAndMember_Id(workspaceSlug, requestingUser.getId())
                 .orElseThrow(() -> new CustomBadRequestException("Invalid requester or workspace"));
 
-        boolean hasHigherRole = createInviteRequestDTOs.stream()
+        boolean hasHigherRole = createInviteRequests.stream()
                 .anyMatch(req -> !requester.getRole().includes(WorkspaceRoleType.valueOf(req.getRole())));
 
         if (hasHigherRole) throw new CustomBadRequestException("You cannot assign a role higher than your own role");
 
-        List<String> invitedEmails = createInviteRequestDTOs.stream()
-                .map(CreateInviteRequestDTO::getEmail)
+        List<String> invitedEmails = createInviteRequests.stream()
+                .map(CreateInviteRequest::getEmail)
                 .toList();
 
         List<WorkspaceMember> workspaceMembers = workspaceMemberRepository.findByWorkspace_SlugAndMember_EmailIn(workspace.getSlug(), invitedEmails);
@@ -60,7 +60,7 @@ public class WorkspaceMemberInviteService {
 
         //TODO маппинг
         List<WorkspaceMemberInvite> workspaceMemberInvites = new ArrayList<>();
-        for (CreateInviteRequestDTO inviteRequest : createInviteRequestDTOs) {
+        for (CreateInviteRequest inviteRequest : createInviteRequests) {
             WorkspaceMemberInvite workspaceMemberInvite = new WorkspaceMemberInvite();
             workspaceMemberInvite.setWorkspace(workspace);
             workspaceMemberInvite.setEmail(inviteRequest.getEmail());
@@ -141,7 +141,7 @@ public class WorkspaceMemberInviteService {
             log.info("User with email: {} is inviter of the invitation with id: {}", email, invitationId);
             return true;
         }
-        log.info("User with email: {} is not the inviter of the invitation with id: {}", email, invitationId);;
+        log.info("User with email: {} is not the inviter of the invitation with id: {}", email, invitationId);
         return false;
 
     }

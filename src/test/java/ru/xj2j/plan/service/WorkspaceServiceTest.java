@@ -11,7 +11,6 @@ import ru.xj2j.plan.dto.WorkspaceMemberDTO;
 import ru.xj2j.plan.dto.WorkspaceUpdateDTO;
 import ru.xj2j.plan.exception.CustomBadRequestException;
 import ru.xj2j.plan.exception.MyEntityNotFoundException;
-import ru.xj2j.plan.mapper.UserMapper;
 import ru.xj2j.plan.mapper.WorkspaceMapper;
 import ru.xj2j.plan.mapper.WorkspaceMemberMapper;
 import ru.xj2j.plan.model.User;
@@ -20,7 +19,6 @@ import ru.xj2j.plan.model.WorkspaceMember;
 import ru.xj2j.plan.repository.WorkspaceMemberRepository;
 import ru.xj2j.plan.repository.WorkspaceRepository;
 
-import java.lang.reflect.Method;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;

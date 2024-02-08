@@ -1,19 +1,15 @@
 package ru.xj2j.plan.dto;
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.OneToMany;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import ru.xj2j.plan.model.WorkspaceMember;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class WorkspaceDTO {
@@ -22,5 +18,6 @@ public class WorkspaceDTO {
     private String slug;
     private String description;
     private UserDTO createdBy;
+    @Builder.Default
     private List<WorkspaceMemberDTO> members = new ArrayList<>();
 }

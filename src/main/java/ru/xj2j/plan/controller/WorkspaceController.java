@@ -7,11 +7,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-import ru.xj2j.plan.dto.WorkspaceCreateDTO;
-import ru.xj2j.plan.dto.WorkspaceDTO;
-import ru.xj2j.plan.dto.WorkspaceUpdateDTO;
+import ru.xj2j.plan.dto.*;
 import ru.xj2j.plan.model.User;
-import ru.xj2j.plan.model.Workspace;
 import ru.xj2j.plan.service.WorkspaceService;
 
 import javax.validation.Valid;

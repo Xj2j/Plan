@@ -25,11 +25,11 @@ public class WorkspaceMemberInvite {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "email", nullable = false)
+    @Column(name = "email", nullable = false, updatable = false)
     private String email;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "workspace_id", referencedColumnName = "id", nullable = false)
+    @JoinColumn(name = "workspace_id", referencedColumnName = "id", nullable = false, updatable = false)
     private Workspace workspace;
 
     @Column(name = "role", nullable = false)
@@ -37,7 +37,7 @@ public class WorkspaceMemberInvite {
     private WorkspaceRoleType role;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false)
+    @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false, updatable = false)
     private User invitor;
 
     @Column(name = "message")

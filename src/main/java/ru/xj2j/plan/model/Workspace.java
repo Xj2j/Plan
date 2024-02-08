@@ -1,18 +1,14 @@
 package ru.xj2j.plan.model;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.CreatedDate;
+import lombok.*;
 
 import javax.validation.constraints.Pattern;
-import java.time.LocalDateTime;
 import java.util.*;
 
-@Entity
 @Data
+@Entity
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "workspaces")
@@ -33,6 +29,7 @@ public class Workspace extends AuditModel {
     @Column(name = "description")
     private String description;
 
+    @Builder.Default
     @OneToMany(mappedBy = "workspace", cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
     private List<WorkspaceMember> members = new ArrayList<>();
 

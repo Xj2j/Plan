@@ -52,6 +52,5 @@ public interface WorkspaceMemberRepository extends JpaRepository<WorkspaceMember
 
     Optional<WorkspaceRoleType> findByMember_IdAndWorkspace_Slug(Long memberId, String workspaceSlug);
 
-
-
+    List<WorkspaceMember> findByWorkspace_SlugAndMember_EmailIn(String slug, List<String> Emails);
 }

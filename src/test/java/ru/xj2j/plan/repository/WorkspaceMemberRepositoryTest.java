@@ -31,7 +31,7 @@ class WorkspaceMemberRepositoryTest {
     @Test
     @DisplayName("findByWorkspaceSlugAndMember_EmailIn should return empty list when workspace and user does not exist")
     void findByWorkspaceSlugAndMember_EmailIn_ShouldReturnEmptyListWhenWorkspaceAndUserDoesNotExist() {
-        var actualMembers = repository.findByWorkspaceSlugAndMember_EmailIn("test-workspace", List.of("email"));
+        var actualMembers = repository.findByWorkspace_SlugAndMember_EmailIn("test-workspace", List.of("email"));
 
         assertThat(actualMembers).isEmpty();
     }
@@ -44,7 +44,7 @@ class WorkspaceMemberRepositoryTest {
         user.setPassword("testpass");
         em.persistAndFlush(user);
 
-        var actualMembers = repository.findByWorkspaceSlugAndMember_EmailIn("test-workspace", List.of(user.getEmail()));
+        var actualMembers = repository.findByWorkspace_SlugAndMember_EmailIn("test-workspace", List.of(user.getEmail()));
 
         assertThat(actualMembers).isEmpty();
     }
@@ -84,7 +84,7 @@ class WorkspaceMemberRepositoryTest {
 
         var expectedMembers = Arrays.asList(workspaceMember1, workspaceMember2);
 
-        var actualMembers = repository.findByWorkspaceSlugAndMember_EmailIn("test-workspace", Arrays.asList(user1.getEmail(), user2.getEmail()));
+        var actualMembers = repository.findByWorkspace_SlugAndMember_EmailIn("test-workspace", Arrays.asList(user1.getEmail(), user2.getEmail()));
         actualMembers.forEach(member -> member.setId(null));
 
         assertThat(actualMembers).hasSize(2);

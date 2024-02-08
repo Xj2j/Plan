@@ -11,6 +11,7 @@ import ru.xj2j.plan.dto.WorkspaceUpdateDTO;
 import ru.xj2j.plan.exception.CustomBadRequestException;
 import ru.xj2j.plan.exception.MyEntityNotFoundException;
 import ru.xj2j.plan.mapper.UserMapper;
+import ru.xj2j.plan.mapper.WorkspaceMemberMapper;
 import ru.xj2j.plan.model.User;
 import ru.xj2j.plan.model.Workspace;
 import ru.xj2j.plan.model.WorkspaceMember;
@@ -30,30 +31,42 @@ import java.util.stream.Collectors;
 public class WorkspaceService {
 
     private final WorkspaceRepository workspaceRepository;
-    private final WorkspaceMemberService workspaceMemberService;
+    private final WorkspaceMemberRepository workspaceMemberRepository;
     private final WorkspaceMapper workspaceMapper;
-    private final UserMapper userMapper;
+    private final WorkspaceMemberMapper memberMapper;
 
     @Transactional(rollbackFor = CustomBadRequestException.class)
     public WorkspaceDTO createWorkspace(WorkspaceCreateDTO workspaceDTO, User requestingUser) {
 
-        log.info("Creating workspace by user: " + requestingUser.getEmail());
+        log.info("Creating workspace by user: {}", requestingUser.getEmail());
 
         if (workspaceRepository.existsBySlug(workspaceDTO.getSlug())) {
             throw new CustomBadRequestException("Slug must be unique");
         }
 
         Workspace workspace = workspaceMapper.toEntity(workspaceDTO);
-
         Workspace createdWorkspace = workspaceRepository.save(workspace);
+        log.info("Workspace created with slug: {} ", createdWorkspace.getSlug());
 
-        WorkspaceMemberDTO createdMember = workspaceMemberService.addOwner(createdWorkspace, requestingUser);
+        WorkspaceMemberDTO createdMember = addOwner(createdWorkspace, requestingUser);
+        log.info("Owner added to workspace: {}", createdWorkspace.getSlug());
 
-        //WorkspaceDTO createdWorkspaceDTO = workspaceMapper.toDto(createdWorkspace);
-
-        //createdWorkspaceDTO.getMembers().add(createdMember);
+        WorkspaceDTO createdWorkspaceDTO = workspaceMapper.toDto(createdWorkspace);
+        createdWorkspaceDTO.getMembers().add(createdMember);
 
         return workspaceMapper.toDto(createdWorkspace);
+    }
+
+    private WorkspaceMemberDTO addOwner(Workspace createdWorkspace, User requestingUser) {
+
+        log.info("Creating owner member for user: {} in workspace with slug: {} ", requestingUser.getEmail(), createdWorkspace.getSlug());
+
+        WorkspaceMember workspaceMember = new WorkspaceMember();
+        workspaceMember.setWorkspace(createdWorkspace);
+        workspaceMember.setMember(requestingUser);
+        workspaceMember.setRole(WorkspaceRoleType.OWNER);
+
+        return memberMapper.toDto(workspaceMemberRepository.save(workspaceMember));
     }
 
     @Transactional(rollbackFor = {MyEntityNotFoundException.class, CustomBadRequestException.class})
