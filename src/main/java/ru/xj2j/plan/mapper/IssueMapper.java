@@ -1,7 +1,6 @@
 package ru.xj2j.plan.mapper;
 
 import org.mapstruct.*;
-import org.mapstruct.factory.Mappers;
 import ru.xj2j.plan.dto.IssueCreateDTO;
 import ru.xj2j.plan.dto.IssueDTO;
 import ru.xj2j.plan.dto.IssueUpdateDTO;
@@ -15,7 +14,8 @@ import static org.mapstruct.InjectionStrategy.CONSTRUCTOR;
 @Mapper(componentModel = "spring", injectionStrategy = CONSTRUCTOR, uses = {UserMapper.class, IssueCommentMapper.class}, unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface IssueMapper {
 
-    @Mapping(target = "workspace", ignore = true)
+    //@Mapping(target = "workspace", ignore = true)
+    @Mapping(source = "workspace.slug", target = "workspaceSlug")
     IssueDTO toDto(Issue issue);
     Issue toEntity(IssueDTO issueDTO);
 

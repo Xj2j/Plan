@@ -1,10 +1,7 @@
 package ru.xj2j.plan.model;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import javax.validation.constraints.NotBlank;
 import java.time.LocalDateTime;
@@ -13,9 +10,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import static jakarta.persistence.FetchType.LAZY;
+
+@Data
+@Builder
 @Entity(name = "Issue")
 @Table(name = "issues")
-@Data
 @AllArgsConstructor
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
@@ -66,19 +66,22 @@ public class Issue extends AuditModel {
     @JoinColumn(name = "workspace_id", referencedColumnName = "id", nullable = false)
     private Workspace workspace;
 
+    @Builder.Default
     @Enumerated(EnumType.STRING)
     @Column(name = "state")
     private State state = State.BACKLOG;
 
+    @Builder.Default
     @Enumerated(EnumType.STRING)
     @Column(name = "priority")
-    private Priority priority;
+    private Priority priority = Priority.MEDIUM;
 
     @NotBlank(message = "Name is required.")
     @Column(name = "name")
     private String name;
 
-    @Column(name = "description", columnDefinition = "json")
+    @Lob @Basic(fetch = FetchType.LAZY)
+    @Column(name = "description", columnDefinition = "TEXT") //, columnDefinition = "json" //columnDefinition="LONGTEXT" //, length = 1024
     private String description;
 
     @Column(name = "start_date")
@@ -90,10 +93,11 @@ public class Issue extends AuditModel {
     @Column(name = "completed_at")
     private LocalDateTime completedAt;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "completed_by_id", referencedColumnName = "id")
     private User completedBy;
 
+    @Builder.Default
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "issue_assignees",
@@ -102,6 +106,7 @@ public class Issue extends AuditModel {
     )
     private Set<User> assignees = new HashSet<>();
 
+    @Builder.Default
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "issue", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<IssueComment> comments = new ArrayList<>();
 

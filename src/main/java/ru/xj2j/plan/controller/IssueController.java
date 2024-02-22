@@ -7,16 +7,20 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-import ru.xj2j.plan.dto.*;
+import ru.xj2j.plan.dto.IssueCreateDTO;
+import ru.xj2j.plan.dto.IssueDTO;
+import ru.xj2j.plan.dto.IssueUpdateDTO;
+import ru.xj2j.plan.dto.UserDTO;
 import ru.xj2j.plan.model.User;
 import ru.xj2j.plan.service.IssueService;
 
 import javax.validation.Valid;
 import java.util.List;
+import java.util.Set;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/workspaces/{workspaceSlug}/")
+@RequestMapping("/api/v1/workspaces/{workspaceSlug}/issues")
 @AllArgsConstructor
 public class IssueController {
 
@@ -40,28 +44,27 @@ public class IssueController {
 
     @PostMapping("/{issueId}/assignees")
     @PreAuthorize("@roleService.isIssueOwner(#issueId)")
-    public ResponseEntity<IssueDTO> addAssignees(@PathVariable String workspaceSlug, @PathVariable Long issueId, @RequestBody List<UserDTO> userDTOs) {
-        log.info("Adding assignees to issue with id: {}", issueId);
-        IssueDTO issue = issueService.addAssignees(workspaceSlug, issueId, userDTOs);
-        return ResponseEntity.ok(issue);
+    public ResponseEntity<String> addAssignees(@PathVariable String workspaceSlug, @PathVariable Long issueId, @RequestBody Set<UserDTO> userDTOs) {
+        //IssueDTO issue = issueService.addAssignees(workspaceSlug, issueId, userDTOs);
+        issueService.addAssignees(workspaceSlug, issueId, userDTOs);
+        return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/{issueId}/assignees")
     @PreAuthorize("@roleService.isIssueOwner(#issueId)")
-    public ResponseEntity<IssueDTO> removeAssignees(@PathVariable String workspaceSlug, @PathVariable Long issueId, @RequestBody List<Long> userIds) {
-        log.info("Removing assignees from issue with id: {}", issueId);
-        IssueDTO issue = issueService.removeAssignees(workspaceSlug, issueId, userIds);
+    public ResponseEntity<IssueDTO> removeAssignees(@PathVariable Long issueId, @RequestBody Set<Long> userIds) {
+        IssueDTO issue = issueService.removeAssignees(issueId, userIds);
         return ResponseEntity.ok(issue);
     }
 
-    @GetMapping("/allIssues")
+    @GetMapping("/all")
     @PreAuthorize("@roleService.hasAnyRoleByWorkspaceSlug(#workspaceSlug, @WorkspaceRole.MEMBER)")
     public ResponseEntity<List<IssueDTO>> getWorkspaceIssues(@PathVariable String workspaceSlug) {
         List<IssueDTO> issues = issueService.getAllIssuesByWorkspaceSlug(workspaceSlug);
         return ResponseEntity.ok(issues);
     }
 
-    @GetMapping("/myOwnIssues")
+    @GetMapping("/myOwn")
     @PreAuthorize("@roleService.hasAnyRoleByWorkspaceSlug(#workspaceSlug, @WorkspaceRole.MEMBER)")
     public ResponseEntity<List<IssueDTO>> getWorkspaceIssuesByOwner(@PathVariable String workspaceSlug, Authentication authentication) {
         User requestingUser = (User) authentication.getPrincipal();
@@ -69,7 +72,7 @@ public class IssueController {
         return ResponseEntity.ok(issues);
     }
 
-    @GetMapping("/myIssues")
+    @GetMapping("/my")
     @PreAuthorize("@roleService.hasAnyRoleByWorkspaceSlug(#workspaceSlug, @WorkspaceRole.MEMBER)")
     public ResponseEntity<List<IssueDTO>> getWorkspaceIssuesByAssignee(@PathVariable String workspaceSlug, Authentication authentication) {
         User requestingUser = (User) authentication.getPrincipal();
@@ -88,6 +91,6 @@ public class IssueController {
     @PreAuthorize("@roleService.isIssueOwner(#issueId)")
     public ResponseEntity<String> deleteIssueById(@PathVariable("issueId") Long issueId, @PathVariable String workspaceSlug) {
         issueService.deleteIssue(issueId, workspaceSlug);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok().build();
     }
 }

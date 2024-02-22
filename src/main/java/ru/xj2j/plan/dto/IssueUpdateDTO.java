@@ -17,6 +17,6 @@ public class IssueUpdateDTO {
     private String description;
     private LocalDateTime startDate;
     private LocalDateTime targetDate;
-    private LocalDateTime completedAt;
-    private UserDTO completedBy;
+    //private LocalDateTime completedAt;
+    //private UserDTO completedBy;
 }

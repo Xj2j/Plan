@@ -10,6 +10,7 @@ import ru.xj2j.plan.model.User;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Repository
 public interface IssueRepository extends JpaRepository<Issue, Long> {
@@ -37,5 +38,11 @@ public interface IssueRepository extends JpaRepository<Issue, Long> {
     boolean existsByCreatedByOrAssignee(@Param("userId") Long userId, @Param("issueId") Long issueId);
 
     Optional<Issue> findByIdAndWorkspaceSlug(Long issueId, String workspaceSlug);
+
+    @Query("SELECT u FROM Issue i JOIN i.assignees u WHERE i.id = :issueId AND u.email IN :emails")
+    Set<User> findAssigneesByIssueIdAndEmails(@Param("issueId") Long issueId, @Param("emails") Set<String> emails);
+
+    @Query("SELECT u FROM Issue i JOIN i.assignees u WHERE i.id = :issueId AND u.id IN :ids")
+    Set<User> findAssigneesByIssueIdAndIds(@Param("issueId") Long issueId, @Param("ids") Set<Long> ids);
 
 }

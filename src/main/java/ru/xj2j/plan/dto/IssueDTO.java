@@ -13,7 +13,8 @@ import java.util.Set;
 @AllArgsConstructor
 public class IssueDTO {
     private Long id;
-    private WorkspaceDTO workspace;
+    //private WorkspaceDTO workspace;
+    private String workspaceSlug;
     private String state;
     private String priority;
     private String name;
